@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/licheng1013/rocket-cat/common"
 	"github.com/licheng1013/rocket-cat/connect"
@@ -13,6 +14,7 @@ import (
 	"rocket-cat-example/action"
 	"rocket-cat-example/app"
 	"rocket-cat-example/config"
+	"rocket-cat-example/entity"
 	"time"
 )
 
@@ -24,15 +26,10 @@ func main() {
 	channel := make(chan int)
 
 	startTime := time.Now()
-	clientCount := 1
-	for i := 0; i < clientCount; i++ {
-		go WsTest(channel)
-	}
-	for i := 0; i < clientCount; i++ {
-		select {
-		case ok := <-channel:
-			log.Println(ok)
-		}
+	go WsTest(channel)
+	select {
+	case _ = <-channel:
+		time.Sleep(1 * time.Millisecond)
 	}
 	log.Println("总时间毫秒:", time.Now().UnixMilli()-startTime.UnixMilli())
 }
@@ -47,26 +44,25 @@ func WsTest(v chan int) {
 	if err != nil {
 		log.Fatal("dial:", err)
 	}
-	var count int64
 	for {
+		e := &entity.Login{UserId: 123456}
 		jsonMessage := messages.JsonMessage{Body: []byte("HelloWorld")}
+		jsonMessage.SetBody(e)
 		jsonMessage.Merge = common.CmdKit.GetMerge(1, 1)
-		err = c.WriteMessage(websocket.TextMessage, jsonMessage.GetBytesResult())
+		err = c.WriteMessage(websocket.BinaryMessage, jsonMessage.GetBytesResult())
 		if err != nil {
 			log.Println("写:", err)
 			return
 		}
-
 		_, m, err := c.ReadMessage()
 		jsonDecoder := decoder.JsonDecoder{}
-		_ = jsonDecoder.DecoderBytes(m)
+		t := jsonDecoder.DecoderBytes(m)
+		_ = t.Bind(&e)
+		fmt.Println("客户端-> ", e)
 		if err != nil {
 			log.Println("读取消息错误:", err)
-			return
 		}
-		count++
-		if count >= 1 { // 接受100w个数据后退出
-			v <- 0
-		}
+		v <- 0
+		break
 	}
 }
