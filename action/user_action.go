@@ -2,7 +2,6 @@ package action
 
 import (
 	"fmt"
-	"github.com/licheng1013/rocket-cat/common"
 	"github.com/licheng1013/rocket-cat/router"
 	"rocket-cat-example/app"
 	"rocket-cat-example/entity"
@@ -10,7 +9,7 @@ import (
 
 func init() {
 	user := UserAction{}
-	app.Gateway.Router().AddAction(common.CmdKit.GetMerge(1, 1), user.login)
+	app.Gateway.Router().AddAction(1, 1, user.login)
 }
 
 type UserAction struct {
