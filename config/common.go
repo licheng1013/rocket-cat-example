@@ -6,6 +6,13 @@ import (
 	"rocket-cat-example/app"
 )
 
+
+func Init() {
+	log.Println("初始化配置")
+	// 添加中间件
+	app.Gateway.Router().AddProxy(&MyProxy{})
+}
+
 type MyProxy struct {
 	proxy router.Proxy
 }
@@ -20,7 +27,4 @@ func (m *MyProxy) SetProxy(proxy router.Proxy) {
 	m.proxy = proxy
 }
 
-func Init() {
-	log.Println("初始化配置")
-	app.Gateway.Router().AddProxy(&MyProxy{})
-}
+
