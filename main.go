@@ -29,9 +29,9 @@ func main() {
 	go WsTest(channel)
 	select {
 	case _ = <-channel:
-		time.Sleep(1 * time.Millisecond)
+		//	time.Sleep(1 * time.Millisecond)
+		log.Println("总时间毫秒:", time.Now().UnixMilli()-startTime.UnixMilli())
 	}
-	log.Println("总时间毫秒:", time.Now().UnixMilli()-startTime.UnixMilli())
 }
 
 // WsTest 模拟客户端

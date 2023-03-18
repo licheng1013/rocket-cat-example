@@ -10,13 +10,13 @@ import (
 
 func init() {
 	user := UserAction{}
-	app.Gateway.Router().AddAction(common.CmdKit.GetMerge(1, 1), user.Login)
+	app.Gateway.Router().AddAction(common.CmdKit.GetMerge(1, 1), user.login)
 }
 
 type UserAction struct {
 }
 
-func (a UserAction) Login(ctx *router.Context) {
+func (a UserAction) login(ctx *router.Context) {
 	var login entity.Login
 	_ = ctx.Message.Bind(&login)
 	fmt.Println("服务端-> ", login)
