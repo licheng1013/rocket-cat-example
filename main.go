@@ -20,7 +20,7 @@ import (
 func main() {
 	action.Init()                                  // 让action先注册
 	config.Init()                                  // 注册配置
-	app.Gateway.SetDecoder(decoder.ProtoDecoder{}) // 设置编码器
+	app.Gateway.SetDecoder(app.Decoder)            // 设置编码器
 	app.Gateway.Start("0.0.0.0:10100", app.Socket) //启动服务,这行注释，把下面的注释取消启动则可以看到一个消息发送demo
 
 	//go app.Gateway.Start(connect.Addr, app.Socket) // 监听端口

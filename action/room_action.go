@@ -1,7 +1,9 @@
 package action
 
 import (
+	"github.com/licheng1013/rocket-cat/common"
 	"github.com/licheng1013/rocket-cat/core"
+	"github.com/licheng1013/rocket-cat/messages"
 	"github.com/licheng1013/rocket-cat/router"
 	"log"
 	"rocket-cat-example/app"
@@ -31,6 +33,7 @@ func init() {
 					for _, item := range userIds { // 移除匹配列表
 						matchMap.Delete(item)
 					}
+					room.matchOk(userIds)
 					return false
 				}
 				return true
@@ -51,7 +54,8 @@ func (a RoomAction) joinMatch(ctx *router.Context) {
 
 	app.Gateway.UsePlugin(core.LoginPluginId, func(r core.Plugin) {
 		// 登入代码
-		r.(*core.LoginPlugin).Login(d.LongData, ctx.SocketId)
+		loginPlugin := r.(*core.LoginPlugin)
+		loginPlugin.Login(d.LongData, ctx.SocketId)
 		// 加入到匹配队列
 		matchMap.Store(d.LongData, nil)
 	})
@@ -59,4 +63,19 @@ func (a RoomAction) joinMatch(ctx *router.Context) {
 
 func (a RoomAction) quitRoom(ctx *router.Context) {
 
+}
+
+// 匹配成功
+func (a RoomAction) matchOk(ids []int64) {
+	app.Gateway.UsePlugin(core.LoginPluginId, func(r core.Plugin) {
+		loginPlugin := r.(*core.LoginPlugin)
+		testDto := dto.ListTestDto{} // TODO 框架还存在bug需要修复完进行这里的操作!
+		for _, uid := range ids {
+			testDto.List = append(testDto.List, &dto.TestDto{UserId: uid})
+		}
+		message := messages.ProtoMessage{}
+		message.SetBody(&testDto)
+		message.SetMerge(common.CmdKit.GetMerge(7, 2))
+		loginPlugin.SendByUserIdMessage(app.Decoder.EncodeBytes(&message), ids...)
+	})
 }
