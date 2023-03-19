@@ -4,7 +4,8 @@ go 1.19
 
 require (
 	github.com/gorilla/websocket v1.5.0
-	github.com/licheng1013/rocket-cat v0.0.13
+	github.com/licheng1013/rocket-cat v0.0.15
+	google.golang.org/protobuf v1.28.0
 )
 
 require (
@@ -46,7 +47,6 @@ require (
 	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
 	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987 // indirect
 	google.golang.org/grpc v1.48.0 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 )

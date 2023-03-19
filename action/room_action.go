@@ -1,6 +1,7 @@
 package action
 
 import (
+	"fmt"
 	"github.com/licheng1013/rocket-cat/common"
 	"github.com/licheng1013/rocket-cat/core"
 	"github.com/licheng1013/rocket-cat/messages"
@@ -8,6 +9,7 @@ import (
 	"log"
 	"rocket-cat-example/app"
 	"rocket-cat-example/dto"
+	"rocket-cat-example/entity"
 	"sync"
 	"time"
 )
@@ -18,7 +20,7 @@ const maxPlayer = 2
 func init() {
 	room := RoomAction{}
 	app.Gateway.Router().AddAction(7, 0, room.joinMatch)
-	app.Gateway.Router().AddAction(7, 1, room.quitRoom)
+	app.Gateway.Router().AddAction(7, 1, room.move)
 
 	ticker := time.NewTicker(1 * time.Second) // 匹配管理器
 	go func() {
@@ -50,27 +52,53 @@ func (a RoomAction) joinMatch(ctx *router.Context) {
 	// 加入房间
 	d := dto.MessageDto{}
 	_ = ctx.Message.Bind(&d)
-	log.Println("加入匹配 -> ", d.LongData)
 
 	app.Gateway.UsePlugin(core.LoginPluginId, func(r core.Plugin) {
 		// 登入代码
 		loginPlugin := r.(*core.LoginPlugin)
 		loginPlugin.Login(d.LongData, ctx.SocketId)
+		log.Printf("加入匹配 -> %v - %v", d.LongData, ctx.SocketId)
 		// 加入到匹配队列
 		matchMap.Store(d.LongData, nil)
 	})
 }
 
-func (a RoomAction) quitRoom(ctx *router.Context) {
+const roomId = 200
 
+func (a RoomAction) move(ctx *router.Context) {
+	d := dto.TestDto{}
+	_ = ctx.Message.Bind(&d)
+	fmt.Println("收到消息 -> ", &d)
+	ctx.Message = nil
+	room, b := common.RoomManger.GetByRoomId(roomId)
+	if b {
+		list := room.(*common.Room).UserList
+		app.Gateway.UsePlugin(core.LoginPluginId, func(r core.Plugin) {
+			plugin := r.(*core.LoginPlugin)
+			for _, userId := range list { // 暂时不做同步处理
+				testDto := dto.ListTestDto{}
+				testDto.List = append(testDto.List, &d)
+				// 处理
+				message := messages.ProtoMessage{}
+				message.SetBody(&testDto)
+				message.SetMerge(common.CmdKit.GetMerge(7, 1))
+				log.Println("发送消息: -> ", &testDto)
+				plugin.SendByUserIdMessage(app.Decoder.EncodeBytes(&message), userId.UserId())
+			}
+		})
+	}
 }
 
 // 匹配成功
 func (a RoomAction) matchOk(ids []int64) {
+	room := common.RoomManger.CreateRoom()
+	room.RoomId = roomId // 暂时写死
+	common.RoomManger.AddRoom(room)
 	app.Gateway.UsePlugin(core.LoginPluginId, func(r core.Plugin) {
 		loginPlugin := r.(*core.LoginPlugin)
-		testDto := dto.ListTestDto{} // TODO 框架还存在bug需要修复完进行这里的操作!
+		testDto := dto.ListTestDto{}
 		for _, uid := range ids {
+			common.RoomManger.PlayerJoinRoom(&entity.Player{Uid: uid}, room.RoomId)
 			testDto.List = append(testDto.List, &dto.TestDto{UserId: uid})
 		}
 		message := messages.ProtoMessage{}
