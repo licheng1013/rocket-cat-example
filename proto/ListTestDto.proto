@@ -1,0 +1,9 @@
+syntax="proto3";
+import "TestDto.proto";
+
+// 导出路径
+option go_package = "rocket-cat-example/dto";
+
+message ListTestDto {
+  repeated TestDto list = 1;
+}

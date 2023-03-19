@@ -15,23 +15,24 @@ import (
 	"rocket-cat-example/app"
 	"rocket-cat-example/config"
 	"rocket-cat-example/entity"
-	"time"
 )
 
 func main() {
 	action.Init()                                  // 让action先注册
 	config.Init()                                  // 注册配置
-	app.Gateway.SetDecoder(decoder.JsonDecoder{})  // 设置编码器
-	go app.Gateway.Start(connect.Addr, app.Socket) // 监听端口
-	channel := make(chan int)
+	app.Gateway.SetDecoder(decoder.ProtoDecoder{}) // 设置编码器
+	app.Gateway.Start("0.0.0.0:10100", app.Socket) //启动服务,这行注释，把下面的注释取消启动则可以看到一个消息发送demo
 
-	startTime := time.Now()
-	go WsTest(channel)
-	select {
-	case _ = <-channel:
-		//	time.Sleep(1 * time.Millisecond)
-		log.Println("总时间毫秒:", time.Now().UnixMilli()-startTime.UnixMilli())
-	}
+	//go app.Gateway.Start(connect.Addr, app.Socket) // 监听端口
+	//channel := make(chan int)
+	//
+	//startTime := time.Now()
+	//go WsTest(channel)
+	//select {
+	//case _ = <-channel:
+	//	//	time.Sleep(1 * time.Millisecond)
+	//	log.Println("总时间毫秒:", time.Now().UnixMilli()-startTime.UnixMilli())
+	//}
 }
 
 // WsTest 模拟客户端

@@ -6,7 +6,7 @@ import (
 	"github.com/licheng1013/rocket-cat/core"
 )
 
-var Gateway = core.NewGateway()
+var Gateway = core.DefaultGateway()
 var Socket = &connect.WebSocket{}
 
 func init() {

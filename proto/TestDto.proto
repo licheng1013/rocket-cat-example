@@ -1,0 +1,12 @@
+syntax="proto3";
+
+// 导出路径
+option go_package = "rocket-cat-example/dto";
+
+message TestDto {
+
+  int32 y = 1;
+  int32 x = 2;
+  int64 userId = 3;
+
+}

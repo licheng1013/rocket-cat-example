@@ -1,0 +1,10 @@
+syntax="proto3";
+
+// 导出路径
+option go_package = "rocket-cat-example/dto";
+
+message MessageDto {
+
+  int64 longData = 1;
+  
+}

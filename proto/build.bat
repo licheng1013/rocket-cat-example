@@ -1,0 +1,1 @@
+cmd /c "protoc *.proto --go_out=../../"
