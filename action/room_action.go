@@ -52,15 +52,13 @@ func (a RoomAction) joinMatch(ctx *router.Context) {
 	// 加入房间
 	d := dto.MessageDto{}
 	_ = ctx.Message.Bind(&d)
-
-	app.Gateway.UsePlugin(core.LoginPluginId, func(r core.Plugin) {
-		// 登入代码
-		loginPlugin := r.(*core.LoginPlugin)
-		loginPlugin.Login(d.LongData, ctx.SocketId)
-		log.Printf("加入匹配 -> %v - %v", d.LongData, ctx.SocketId)
-		// 加入到匹配队列
-		matchMap.Store(d.LongData, nil)
-	})
+	r := app.Gateway.GetPlugin(core.LoginPluginId)
+	// 登入代码
+	loginPlugin := r.(*core.LoginPlugin)
+	loginPlugin.Login(d.LongData, ctx.SocketId)
+	log.Printf("加入匹配 -> %v - %v", d.LongData, ctx.SocketId)
+	// 加入到匹配队列
+	matchMap.Store(d.LongData, nil)
 }
 
 const roomId = 200
@@ -70,22 +68,18 @@ func (a RoomAction) move(ctx *router.Context) {
 	_ = ctx.Message.Bind(&d)
 	fmt.Println("收到消息 -> ", &d)
 	ctx.Message = nil
-	room, b := common.RoomManger.GetByRoomId(roomId)
-	if b {
-		list := room.(*common.Room).UserList
-		app.Gateway.UsePlugin(core.LoginPluginId, func(r core.Plugin) {
-			plugin := r.(*core.LoginPlugin)
-			for _, userId := range list { // 暂时不做同步处理
-				testDto := dto.ListTestDto{}
-				testDto.List = append(testDto.List, &d)
-				// 处理
-				message := messages.ProtoMessage{}
-				message.SetBody(&testDto)
-				message.SetMerge(common.CmdKit.GetMerge(7, 1))
-				log.Println("发送消息: -> ", &testDto)
-				plugin.SendByUserIdMessage(app.Decoder.EncodeBytes(&message), userId.UserId())
-			}
-		})
+	room := common.RoomManger.GetByRoomId(roomId)
+	if room != nil {
+		r := app.Gateway.GetPlugin(core.LoginPluginId)
+		plugin := r.(*core.LoginPlugin)
+		testDto := dto.ListTestDto{}
+		testDto.List = append(testDto.List, &d)
+		// 处理
+		message := messages.ProtoMessage{}
+		message.SetBody(&testDto)
+		message.SetMerge(common.CmdKit.GetMerge(7, 1))
+		log.Println("发送消息: -> ", &testDto)
+		plugin.SendByUserIdMessage(app.Decoder.EncodeBytes(&message), room.UserIds()...)
 	}
 }
 
@@ -94,16 +88,15 @@ func (a RoomAction) matchOk(ids []int64) {
 	room := common.RoomManger.CreateRoom()
 	room.RoomId = roomId // 暂时写死
 	common.RoomManger.AddRoom(room)
-	app.Gateway.UsePlugin(core.LoginPluginId, func(r core.Plugin) {
-		loginPlugin := r.(*core.LoginPlugin)
-		testDto := dto.ListTestDto{}
-		for _, uid := range ids {
-			common.RoomManger.PlayerJoinRoom(&entity.Player{Uid: uid}, room.RoomId)
-			testDto.List = append(testDto.List, &dto.TestDto{UserId: uid})
-		}
-		message := messages.ProtoMessage{}
-		message.SetBody(&testDto)
-		message.SetMerge(common.CmdKit.GetMerge(7, 2))
-		loginPlugin.SendByUserIdMessage(app.Decoder.EncodeBytes(&message), ids...)
-	})
+	r := app.Gateway.GetPlugin(core.LoginPluginId)
+	loginPlugin := r.(*core.LoginPlugin)
+	testDto := dto.ListTestDto{}
+	for _, uid := range ids {
+		common.RoomManger.PlayerJoinRoom(&entity.Player{Uid: uid}, room.RoomId)
+		testDto.List = append(testDto.List, &dto.TestDto{UserId: uid})
+	}
+	message := messages.ProtoMessage{}
+	message.SetBody(&testDto)
+	message.SetMerge(common.CmdKit.GetMerge(7, 2))
+	loginPlugin.SendByUserIdMessage(app.Decoder.EncodeBytes(&message), ids...)
 }
