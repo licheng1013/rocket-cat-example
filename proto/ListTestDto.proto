@@ -6,4 +6,6 @@ option go_package = "rocket-cat-example/dto";
 
 message ListTestDto {
   repeated TestDto list = 1;
+  // 帧编号
+  int32 frame = 2;
 }
