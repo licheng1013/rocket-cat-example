@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/gorilla/websocket v1.5.0
-	github.com/licheng1013/rocket-cat v0.0.24
+	github.com/licheng1013/rocket-cat v0.0.26
 	google.golang.org/protobuf v1.28.0
 )
 
