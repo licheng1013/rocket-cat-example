@@ -25,20 +25,43 @@ func init() {
 		}
 		// 帧编号
 		var frameId int32
+		room.List = append(room.List, &common.SafeList{})
 		fmt.Println("帧同步开始")
 		room.StartCustom(func() {
+			list := room.List[frameId]
+			dataList := list.GetList()
+			dtoList := convert(dataList)
 			// 发送第一帧数据
-			testDto := dto.ListTestDto{Frame: frameId}
+			testDto := dto.ListTestDto{Frame: frameId, List: dtoList}
 			// 获取登入插件并发送数据
 			r := app.Gateway.GetPlugin(1)
 			loginPlugin := r.(*core.LoginPlugin)
 			loginPlugin.SendByUserIdMessage(app.Decoder.Tool(player.Cmd, player.SyncCmd, &testDto), room.UserIds()...)
+			frameId++
+			room.List = append(room.List, &common.SafeList{})
 		}, time.Second/20) // 20帧
 	})
 
 	user := UserAction{}
 	app.Gateway.Router().AddAction(player.Cmd, player.Login, user.Login)
 	app.Gateway.Router().AddAction(player.Cmd, player.AddMatch, user.AddMatch)
+
+	// 清理房间
+	//go func() {
+	//	for {
+	//		time.Sleep(time.Second * 1)
+	//		common.RoomManger.RoomClear(3)
+	//	}
+	//}()
+}
+
+// dataList转换为TestDto
+func convert(dataList []interface{}) []*dto.TestDto {
+	var list []*dto.TestDto
+	for _, data := range dataList {
+		list = append(list, data.(*dto.TestDto))
+	}
+	return list
 }
 
 type UserAction struct {

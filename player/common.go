@@ -12,9 +12,11 @@ var P1 = 123
 var P2 = 456
 
 const Cmd = 1
-const Login = 1
-const AddMatch = 2
-const SyncCmd = 3
+const (
+	Login    = 1
+	AddMatch = 2
+	SyncCmd  = 3
+)
 
 // Message 消息分发
 func Message(data []byte) {
@@ -27,4 +29,11 @@ func Message(data []byte) {
 		_ = message.Bind(&list)
 		fmt.Println("同步消息-> ", &list)
 	}
+}
+
+func SendSyncMsg(user int) []byte {
+	testDto := dto.TestDto{UserId: int64(user)}
+	testDto.X = 1
+	tool := JsonDecoder.Tool(Cmd, SyncCmd, &testDto)
+	return tool
 }

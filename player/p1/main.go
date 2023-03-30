@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/licheng1013/rocket-cat/connect"
 	"log"
@@ -22,7 +21,7 @@ func main() {
 	for {
 		_, m, err := conn.ReadMessage()
 		player.Message(m)
-		fmt.Println("客户端-> ", e)
+		//fmt.Println("客户端-> ", e)
 		if err != nil {
 			log.Println("读取消息错误:", err)
 		}
