@@ -22,18 +22,7 @@ func main() {
 	config.Init()                       // 注册配置
 	app.Gateway.SetDecoder(app.Decoder) // 设置编码器
 	app.Gateway.SetSocket(app.Socket)   // 设置socket
-	app.Gateway.Start(connect.Addr)     //启动服务,这行注释，把下面的注释取消启动则可以看到一个消息发送demo
-
-	//go app.Gateway.Start(connect.Addr) // 监听端口
-	//channel := make(chan int)
-	//
-	//startTime := time.Now()
-	//go WsTest(channel)
-	//select {
-	//case _ = <-channel:
-	//	//	time.Sleep(1 * time.Millisecond)
-	//	log.Println("总时间毫秒:", time.Now().UnixMilli()-startTime.UnixMilli())
-	//}
+	app.Gateway.Start(":10100")         //启动服务,这行注释，把下面的注释取消启动则可以看到一个消息发送demo
 }
 
 // WsTest 模拟客户端

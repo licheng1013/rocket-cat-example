@@ -9,7 +9,7 @@ import (
 
 var Gateway = core.DefaultGateway()
 var Socket = &connect.WebSocket{}
-var Decoder = decoder.JsonDecoder{}
+var Decoder = decoder.ProtoDecoder{}
 
 func init() {
 	Socket.OnClose(func(socketId uint32) {
