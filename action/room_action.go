@@ -11,12 +11,9 @@ import (
 	"rocket-cat-example/cmd"
 	"rocket-cat-example/dto"
 	"rocket-cat-example/entity"
-	"sync"
-	"time"
 )
 
-var matchMap sync.Map //匹配map
-const maxPlayer = 2
+var matchQueue *common.MatchQueue
 
 func init() {
 	room := RoomAction{}
@@ -24,26 +21,7 @@ func init() {
 	app.Gateway.Router().AddAction(cmd.Room, cmd.Move, room.move)
 	app.Gateway.Router().AddAction(cmd.Room, cmd.QuitRoom, room.quitRoom)
 
-	ticker := time.NewTicker(1 * time.Second) // 匹配管理器
-	go func() {
-		for _ = range ticker.C {
-			var userIds []int64
-			i := 0
-			matchMap.Range(func(key, value any) bool {
-				i++
-				userIds = append(userIds, key.(int64))
-				if i == maxPlayer { // 如果存在两个人，则匹配成功，就立即退出
-					log.Println("两个匹配玩家id -> ", userIds)
-					for _, item := range userIds { // 移除匹配列表
-						matchMap.Delete(item)
-					}
-					room.matchOk(userIds)
-					return false
-				}
-				return true
-			})
-		}
-	}()
+	matchQueue = common.NewMatchQueue(2, room.matchOk)
 }
 
 // RoomAction 房间管理器
@@ -60,7 +38,7 @@ func (a RoomAction) joinMatch(ctx *router.Context) {
 	loginPlugin.Login(d.LongData, ctx.SocketId)
 	log.Printf("加入匹配 -> %v - %v", d.LongData, ctx.SocketId)
 	// 加入到匹配队列
-	matchMap.Store(d.LongData, nil)
+	matchQueue.AddMatch(d.LongData)
 }
 
 func (a RoomAction) move(ctx *router.Context) {
