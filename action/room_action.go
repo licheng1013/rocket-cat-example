@@ -8,6 +8,7 @@ import (
 	"github.com/licheng1013/rocket-cat/router"
 	"log"
 	"rocket-cat-example/app"
+	"rocket-cat-example/cmd"
 	"rocket-cat-example/dto"
 	"rocket-cat-example/entity"
 	"sync"
@@ -19,9 +20,9 @@ const maxPlayer = 2
 
 func init() {
 	room := RoomAction{}
-	app.Gateway.Router().AddAction(7, 0, room.joinMatch)
-	app.Gateway.Router().AddAction(7, 1, room.move)
-	app.Gateway.Router().AddAction(7, 3, room.quitRoom)
+	app.Gateway.Router().AddAction(cmd.Room, cmd.JoinMatch, room.joinMatch)
+	app.Gateway.Router().AddAction(cmd.Room, cmd.Move, room.move)
+	app.Gateway.Router().AddAction(cmd.Room, cmd.QuitRoom, room.quitRoom)
 
 	ticker := time.NewTicker(1 * time.Second) // 匹配管理器
 	go func() {
