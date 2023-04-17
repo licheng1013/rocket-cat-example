@@ -14,6 +14,7 @@ import (
 )
 
 var matchQueue *common.MatchQueue
+var roomManager = common.NewRoomManger()
 
 func init() {
 	room := RoomAction{}
@@ -38,14 +39,14 @@ func (a RoomAction) joinMatch(ctx *router.Context) {
 	loginPlugin.Login(d.LongData, ctx.SocketId)
 	log.Printf("加入匹配 -> %v - %v", d.LongData, ctx.SocketId)
 	// 加入到匹配队列
-	matchQueue.AddMatch(d.LongData)
+	matchQueue.AddMatch(&entity.Player{Uid: d.LongData})
 }
 
 func (a RoomAction) move(ctx *router.Context) {
-	d := dto.TestDto{}
+	var d dto.TestDto
 	_ = ctx.Message.Bind(&d)
 	fmt.Println("收到消息 -> ", &d)
-	room := common.RoomManger.GetByUserId(d.UserId)
+	room := roomManager.GetByUserId(d.GetUserId())
 	if room != nil {
 		r := app.Gateway.GetPlugin(core.LoginPluginId)
 		plugin := r.(*core.LoginPlugin)
@@ -57,21 +58,22 @@ func (a RoomAction) move(ctx *router.Context) {
 		message.SetBody(&testDto)
 		message.SetMerge(common.CmdKit.GetMerge(7, 1))
 		log.Println("发送消息: -> ", &testDto)
-		plugin.SendByUserIdMessage(app.Decoder.EncodeBytes(&message), room.UserIds()...)
+		plugin.SendByUserIdMessage(app.Decoder.EncodeBytes(&message), room.GetUserIdList()...)
 	}
 	ctx.Message = nil
 }
 
 // 匹配成功
 func (a RoomAction) matchOk(ids []int64) {
-	room := common.RoomManger.CreateRoom()
-	common.RoomManger.AddRoom(room)
+	roomId := roomManager.GetUniqueRoomId()
+	room := common.DefaultRoom{RoomId: roomId}
+	roomManager.AddRoom(&room)
 	r := app.Gateway.GetPlugin(core.LoginPluginId)
 	loginPlugin := r.(*core.LoginPlugin)
 	testDto := dto.ListTestDto{}
 	log.Println("创建房间")
 	for _, uid := range ids {
-		common.RoomManger.PlayerJoinRoom(&entity.Player{Uid: uid}, room.RoomId)
+		roomManager.JoinRoom(&entity.Player{Uid: uid}, room.RoomId)
 		testDto.List = append(testDto.List, &dto.TestDto{UserId: uid})
 	}
 	message := messages.ProtoMessage{}
@@ -84,9 +86,9 @@ func (a RoomAction) quitRoom(ctx *router.Context) {
 	d := dto.MessageDto{}
 	_ = ctx.Message.Bind(&d)
 	// 退出房间并退出登入了
-	room := common.RoomManger.GetByUserId(d.LongData)
+	room := roomManager.GetByUserId(d.LongData)
 	if room != nil {
-		common.RoomManger.RemoveRoom(room.RoomId)
+		roomManager.RemoveRoom(room.GetRoomId())
 	}
 	r := app.Gateway.GetPlugin(core.LoginPluginId)
 	loginPlugin := r.(*core.LoginPlugin)
