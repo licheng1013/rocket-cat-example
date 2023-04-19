@@ -11,7 +11,8 @@ func main() {
 	// 添加一个路由
 	gateway.Router().AddAction(1, 1, func(ctx *router.Context) {
 		// 设置不返回数据
-		ctx.Message = nil
+		ctx.Message.SetBody(map[string]interface{}{"name": "RocketCat"})
+		ctx.Message.SetMessage("这是消息")
 	})
 	// 绑定路由
 	gateway.Start(":10100")
